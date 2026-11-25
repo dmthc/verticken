@@ -1,0 +1,8 @@
+{
+ "records": 2789035,
+ "words": 1076579,
+ "title_shards": 300,
+ "source": "Open Library Datendumps (openlibrary.org/developers/dumps)",
+ "built": "2026-11-25",
+ "filter": "ISBN 978-3… oder Sprache Deutsch"
+}
