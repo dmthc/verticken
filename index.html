@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6f5c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bücher verticken">
+<title>Bücher verticken</title>
+<style>
+:root{
+  --bg:#f6f5f1;--card:#ffffff;--ink:#1d2421;--muted:#66706b;--line:#e2e0d8;
+  --accent:#1f6f5c;--accent-ink:#ffffff;--warn-bg:#fff4d6;--warn-ink:#6b4b00;
+  --bad:#b3261e;--good:#1f7a3a;--chip:#eef2ef;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121614;--card:#1b201e;--ink:#e8ece9;--muted:#9aa49f;--line:#2c3330;
+    --accent:#4fb79a;--accent-ink:#0d1210;--warn-bg:#3a3014;--warn-ink:#f3d58a;
+    --bad:#ff8a80;--good:#7fd99a;--chip:#232a27;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121614;--card:#1b201e;--ink:#e8ece9;--muted:#9aa49f;--line:#2c3330;
+  --accent:#4fb79a;--accent-ink:#0d1210;--warn-bg:#3a3014;--warn-ink:#f3d58a;
+  --bad:#ff8a80;--good:#7fd99a;--chip:#232a27;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 16px 0}
+h1{font-size:1.15rem;margin:0 0 8px}
+nav{display:flex;gap:4px;overflow-x:auto}
+nav button{flex:1;background:none;border:0;border-bottom:3px solid transparent;padding:8px 6px;color:var(--muted);font-weight:600;font-size:.95rem;cursor:pointer;white-space:nowrap}
+nav button.active{color:var(--ink);border-color:var(--accent)}
+main{max-width:720px;margin:0 auto;padding:12px 16px 80px}
+.banner{background:var(--warn-bg);color:var(--warn-ink);border-radius:10px;padding:8px 12px;font-size:.88rem;margin:0 0 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:0 0 12px}
+.card h2{font-size:1rem;margin:0 0 8px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input[type=text],input[type=number],input[type=password],input[type=search]{flex:1;min-width:0;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:1rem}
+button.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:10px 14px;font-weight:600;font-size:.95rem;cursor:pointer}
+button.btn.secondary{background:var(--chip);color:var(--ink)}
+button.btn.small{padding:6px 10px;font-size:.85rem}
+button.btn:disabled{opacity:.5;cursor:default}
+.big{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.big button{padding:16px 10px;font-size:1rem}
+.muted{color:var(--muted);font-size:.88rem}
+.msg{margin-top:8px;font-size:.9rem}
+.msg.err{color:var(--bad)}
+.msg.ok{color:var(--good)}
+.item{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.cover{width:46px;height:66px;flex:none;border-radius:4px;background:var(--chip);object-fit:cover}
+.item .meta{flex:1;min-width:0}
+.item .title{font-weight:600;overflow-wrap:anywhere}
+.prices{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px;margin-top:6px}
+.price{background:var(--chip);border-radius:8px;padding:4px 6px;font-size:.8rem}
+.price.best{outline:2px solid var(--accent)}
+.price label{display:block;color:var(--muted);font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.price input{width:100%;border:0;background:transparent;color:var(--ink);font-size:.9rem;padding:0;font-weight:600}
+.tag{display:inline-block;font-size:.7rem;padding:1px 6px;border-radius:6px;background:var(--warn-bg);color:var(--warn-ink);margin-left:4px;vertical-align:middle}
+.x{background:none;border:0;color:var(--muted);font-size:1.2rem;cursor:pointer;align-self:flex-start}
+.cand{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.cand .meta{flex:1;min-width:0}
+.total{font-size:1.4rem;font-weight:700}
+.dealer-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ok-pill,.bad-pill{font-size:.75rem;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.ok-pill{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
+.bad-pill{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
+ul.plain{list-style:none;margin:6px 0 0;padding:0}
+ul.plain li{display:flex;justify-content:space-between;gap:8px;padding:3px 0;font-size:.92rem}
+ul.plain li span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dealer-edit{display:grid;grid-template-columns:auto 1fr 90px;gap:6px;align-items:center;margin-bottom:8px}
+#scanner{position:fixed;inset:0;background:#000;z-index:50;display:none;flex-direction:column}
+#scanner video{flex:1;width:100%;object-fit:cover}
+#scanner .bar{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;color:#fff;gap:8px}
+#scanner .frame{position:absolute;left:10%;right:10%;top:38%;height:22%;border:3px solid rgba(255,255,255,.85);border-radius:12px;pointer-events:none}
+.hidden{display:none!important}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--muted);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+details summary{cursor:pointer;font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <h1>📚 Bücher verticken <span class="muted">Prototyp</span></h1>
+  <nav>
+    <button data-tab="add" class="active">Erfassen</button>
+    <button data-tab="list">Liste (<span id="count">0</span>)</button>
+    <button data-tab="cart">Warenkorb</button>
+    <button data-tab="settings">Einstellungen</button>
+  </nav>
+</header>
+
+<main>
+  <p class="banner" id="demoBanner"><b>Beispieldaten:</b> Die Ankaufpreise sind erfunden und nur zum Testen der Aufteilung gedacht. Echte Preise kannst du in der Liste je Händler von Hand eintragen.</p>
+
+  <!-- ERFASSEN -->
+  <section id="tab-add">
+    <div class="card">
+      <h2>Buch hinzufügen</h2>
+      <div class="big">
+        <button class="btn" id="btnPhoto">📷 Foto von Cover oder Buchrücken</button>
+        <button class="btn secondary" id="btnScan">▥ Barcode scannen</button>
+      </div>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden">
+      <p class="muted" id="aiHint"></p>
+    </div>
+
+    <div class="card">
+      <h2>ISBN / EAN eingeben</h2>
+      <form class="row" id="isbnForm">
+        <input type="text" id="isbnInput" inputmode="numeric" placeholder="z. B. 978-3-257-22800-7" autocomplete="off">
+        <button class="btn" type="submit">Hinzufügen</button>
+      </form>
+      <div class="msg" id="isbnMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>Nach Titel suchen</h2>
+      <form class="row" id="searchForm">
+        <input type="search" id="qTitle" placeholder="Titel">
+        <input type="search" id="qAuthor" placeholder="Autor (optional)">
+        <button class="btn" type="submit">Suchen</button>
+      </form>
+    </div>
+
+    <div id="results"></div>
+  </section>
+
+  <!-- LISTE -->
+  <section id="tab-list" class="hidden">
+    <div class="card">
+      <div class="dealer-h"><h2>Deine Artikel</h2><button class="btn small secondary" id="btnClear">Liste leeren</button></div>
+      <p class="muted">Preise je Händler in €. Leeres Feld bedeutet „Händler kauft nicht an“. Ein Wert, den du einträgst, ersetzt den Beispielwert.</p>
+      <div id="items"></div>
+    </div>
+  </section>
+
+  <!-- WARENKORB -->
+  <section id="tab-cart" class="hidden">
+    <div id="cart"></div>
+  </section>
+
+  <!-- EINSTELLUNGEN -->
+  <section id="tab-settings" class="hidden">
+    <div class="card">
+      <h2>Händler und Mindestwarenwerte</h2>
+      <p class="muted">Die Mindestwerte sind <b>Annahmen</b> und nicht geprüft. Bitte mit den aktuellen Bedingungen der Händler abgleichen.</p>
+      <div id="dealerEdit"></div>
+      <button class="btn small secondary" id="btnAddDealer">+ Händler hinzufügen</button>
+    </div>
+    <div class="card">
+      <h2>KI-Erkennung (Claude)</h2>
+      <p class="muted">Für die Foto-Erkennung wird das Bild an die Claude API geschickt. Dafür brauchst du einen eigenen API-Schlüssel von console.anthropic.com. Der Schlüssel bleibt nur in diesem Browser gespeichert. Ohne Schlüssel liest die App nur Barcodes aus Fotos, und du suchst den Titel von Hand.</p>
+      <div class="row" style="margin-bottom:8px">
+        <input type="password" id="apiKey" placeholder="sk-ant-…" autocomplete="off">
+      </div>
+      <div class="row">
+        <label class="muted" for="model">Modell</label>
+        <input type="text" id="model">
+      </div>
+      <div class="msg muted">Standard ist <code>claude-opus-5-5</code>. Günstiger, aber bei schwer lesbaren Buchrücken eventuell ungenauer: <code>claude-haiku-5-5</code>.</div>
+    </div>
+    <div class="card">
+      <h2>Preise</h2>
+      <label class="row"><input type="checkbox" id="useDemo"> Beispielpreise für leere Felder erzeugen</label>
+    </div>
+  </section>
+</main>
+
+<div id="scanner">
+  <div class="bar"><span>Barcode ins Feld halten</span><button class="btn small secondary" id="btnCloseScan">Schließen</button></div>
+  <video id="video" playsinline muted></video>
+  <div class="frame"></div>
+  <div class="bar"><span id="scanStatus" class="muted" style="color:#ccc">Kamera wird gestartet …</span></div>
+</div>
+
+<script>
+"use strict";
+/* ---------- Speicher ---------- */
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v==null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+const DEFAULT_DEALERS = [
+  {id:"momox",   name:"momox",     min:10, url:"https://www.momox.de",    on:true},
+  {id:"rebuy",   name:"rebuy",     min:10, url:"https://www.rebuy.de",    on:true},
+  {id:"studibuch",name:"Studibuch",min:10, url:"https://www.studibuch.de",on:true}
+];
+const state = {
+  items: store.get("items", []),
+  dealers: store.get("dealers", DEFAULT_DEALERS),
+  settings: Object.assign({apiKey:"", model:"claude-opus-5-5", useDemo:true}, store.get("settings", {}))
+};
+function save(){ store.set("items", state.items); store.set("dealers", state.dealers); store.set("settings", state.settings); }
+
+/* ---------- Helfer ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const eur = n => (n==null || isNaN(n)) ? "–" : n.toLocaleString("de-DE",{style:"currency",currency:"EUR"});
+const r2 = n => Math.round(n*100)/100;
+
+/* ISBN/EAN prüfen und normalisieren */
+function cleanCode(s){ return String(s||"").toUpperCase().replace(/[^0-9X]/g,""); }
+function validEan13(c){ if(!/^\d{13}$/.test(c)) return false; let s=0; for(let i=0;i<12;i++) s+=(+c[i])*(i%2?3:1); return (10-s%10)%10 === +c[12]; }
+function validIsbn10(c){ if(!/^\d{9}[\dX]$/.test(c)) return false; let s=0; for(let i=0;i<10;i++) s+=(c[i]==="X"?10:+c[i])*(10-i); return s%11===0; }
+function isbn10to13(c){ const b="978"+c.slice(0,9); let s=0; for(let i=0;i<12;i++) s+=(+b[i])*(i%2?3:1); return b+((10-s%10)%10); }
+function normalize(raw){
+  const c = cleanCode(raw);
+  if(c.length===10 && validIsbn10(c)) return {code:isbn10to13(c), isBook:true};
+  if(c.length===13 && validEan13(c)) return {code:c, isBook:/^97[89]/.test(c)};
+  return null;
+}
+
+/* ---------- Buchdaten online ---------- */
+async function getJSON(url){ const r = await fetch(url); if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); }
+function gbToBook(v){
+  const ids = v.industryIdentifiers || [];
+  let isbn = (ids.find(i=>i.type==="ISBN_13")||{}).identifier;
+  if(!isbn){ const i10=(ids.find(i=>i.type==="ISBN_10")||{}).identifier; if(i10 && validIsbn10(i10)) isbn=isbn10to13(i10); }
+  const img = v.imageLinks && (v.imageLinks.thumbnail || v.imageLinks.smallThumbnail);
+  return {isbn, title:v.title + (v.subtitle?": "+v.subtitle:""), authors:(v.authors||[]).join(", "),
+          year:(v.publishedDate||"").slice(0,4), publisher:v.publisher||"", cover: img ? img.replace(/^http:/,"https:") : ""};
+}
+async function lookupIsbn(isbn){
+  try{
+    const d = await getJSON("https://www.googleapis.com/books/v1/volumes?q=isbn:"+isbn);
+    if(d.items && d.items.length) return Object.assign(gbToBook(d.items[0].volumeInfo), {isbn});
+  }catch(e){}
+  try{
+    const d = await getJSON("https://openlibrary.org/api/books?bibkeys=ISBN:"+isbn+"&format=json&jscmd=data");
+    const b = d["ISBN:"+isbn];
+    if(b) return {isbn, title:b.title, authors:(b.authors||[]).map(a=>a.name).join(", "),
+                  year:(b.publish_date||"").slice(-4), publisher:((b.publishers||[])[0]||{}).name||"",
+                  cover:(b.cover&&(b.cover.medium||b.cover.small))||""};
+  }catch(e){}
+  return null;
+}
+async function searchBooks(title, author){
+  const out = [];
+  const seen = new Set();
+  try{
+    let q = 'intitle:"'+title+'"'; if(author) q += '+inauthor:"'+author+'"';
+    const d = await getJSON("https://www.googleapis.com/books/v1/volumes?maxResults=12&printType=books&q="+encodeURIComponent(q));
+    for(const it of d.items||[]){ const b=gbToBook(it.volumeInfo); if(b.isbn && /^97[89]/.test(b.isbn) && !seen.has(b.isbn)){ seen.add(b.isbn); b.src="Google Books"; out.push(b); } }
+  }catch(e){}
+  if(out.length < 3){
+    try{
+      let u = "https://openlibrary.org/search.json?limit=6&fields=title,author_name,isbn,cover_i,first_publish_year,publisher&title="+encodeURIComponent(title);
+      if(author) u += "&author="+encodeURIComponent(author);
+      const d = await getJSON(u);
+      for(const doc of d.docs||[]){
+        const isbns = (doc.isbn||[]).map(cleanCode).filter(c=>c.length===13 && validEan13(c) && /^97[89]/.test(c)).slice(0,4);
+        for(const isbn of isbns){ if(seen.has(isbn)) continue; seen.add(isbn);
+          out.push({isbn, title:doc.title, authors:(doc.author_name||[]).join(", "), year:doc.first_publish_year||"",
+                    publisher:(doc.publisher||[])[0]||"", cover: doc.cover_i ? "https://covers.openlibrary.org/b/id/"+doc.cover_i+"-S.jpg" : "", src:"Open Library (Ausgabe unklar)"}); }
+      }
+    }catch(e){}
+  }
+  return out;
+}
+
+/* ---------- Preise ---------- */
+/* Beispielpreise: deterministisch aus ISBN + Händler, damit sie bei jedem Laden gleich bleiben. NICHT ECHT. */
+function hash(s){ let h=2166136261; for(const ch of s){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619); } return (h>>>0)/4294967295; }
+function demoPrice(code, dealerId){
+  const accept = hash(code+"|a|"+dealerId);
+  if(accept < 0.25) return null;
+  const base = hash(code+"|base");
+  const spread = hash(code+"|"+dealerId);
+  return r2(Math.max(0.1, base*base*7 * (0.6 + spread*0.8)));
+}
+function priceOf(item, d){
+  if(item.manual && d.id in item.manual) return item.manual[d.id];
+  return state.settings.useDemo ? demoPrice(item.code, d.id) : null;
+}
+function isManual(item, d){ return !!(item.manual && d.id in item.manual); }
+
+/* ---------- Optimierung ---------- */
+/* Maximiert die Gesamtauszahlung. Jeder Händler, an den etwas geht, muss seinen Mindestwarenwert erreichen.
+   Ansatz: alle Händler-Kombinationen durchprobieren, je Kombination exakte Suche mit Schranken. */
+function optimize(items, dealers){
+  const D = dealers.filter(d=>d.on);
+  const P = items.map(it => D.map(d => { const p = priceOf(it,d); return (p!=null && p>0) ? p : null; }));
+  let best = {total:0, assign:items.map(()=>-1), used:0, exact:true};
+  const masks = [];
+  for(let m=1; m < (1<<D.length); m++) masks.push(m);
+  masks.sort((a,b)=>popcount(a)-popcount(b));
+  for(const m of masks){
+    const S = D.map((_,j)=>j).filter(j=>m&(1<<j));
+    const idx = items.map((_,i)=>i).filter(i=>S.some(j=>P[i][j]!=null));
+    const maxIn = i => Math.max(...S.map(j=>P[i][j]??0));
+    idx.sort((a,b)=>maxIn(b)-maxIn(a));
+    const n = idx.length;
+    const suffMax = new Array(n+1).fill(0), suffCap = S.map(()=>new Array(n+1).fill(0));
+    for(let k=n-1;k>=0;k--){ suffMax[k]=suffMax[k+1]+maxIn(idx[k]); S.forEach((j,s)=>suffCap[s][k]=suffCap[s][k+1]+(P[idx[k]][j]??0)); }
+    if(S.some((j,s)=>suffCap[s][0] + 1e-9 < D[j].min)) continue;
+    if(suffMax[0] <= best.total + 1e-9) continue; // kann das bisher Beste nicht schlagen (bei Gleichstand gewinnt weniger Pakete)
+    const sums = S.map(()=>0), cur = new Array(n).fill(-1);
+    let localBest = null, nodes = 0, LIMIT = 300000, aborted = false;
+    (function dfs(k, total){
+      if(aborted) return;
+      if(++nodes > LIMIT){ aborted = true; return; }
+      const bound = localBest ? localBest.total : best.total;
+      if(total + suffMax[k] <= bound + 1e-9) return;
+      for(let s=0;s<S.length;s++) if(sums[s] + suffCap[s][k] + 1e-9 < D[S[s]].min) return;
+      if(k===n){ localBest = {total, cur:cur.slice()}; return; }
+      const i = idx[k];
+      const opts = S.map((j,s)=>({s,p:P[i][j]})).filter(o=>o.p!=null).sort((a,b)=>b.p-a.p);
+      for(const o of opts){ cur[k]=o.s; sums[o.s]+=o.p; dfs(k+1, total+o.p); sums[o.s]-=o.p; if(aborted) return; }
+      cur[k] = -1;
+    })(0, 0);
+    if(aborted){ // Notlösung: jedes Buch zum besten Händler der Kombination, nur wenn alle Mindestwerte erreicht
+      const g = idx.map(i=>{ let bs=0; S.forEach((j,s)=>{ if((P[i][j]??-1) > (P[i][S[bs]]??-1)) bs=s; }); return bs; });
+      const gs = S.map(()=>0); let gt=0; g.forEach((s,k)=>{ const p=P[idx[k]][S[s]]; gs[s]+=p; gt+=p; });
+      if(S.every((j,s)=>gs[s]+1e-9>=D[j].min) && (!localBest || gt>localBest.total)) localBest={total:gt, cur:g};
+    }
+    if(localBest && localBest.total > best.total + 1e-9){
+      const assign = items.map(()=>-1);
+      localBest.cur.forEach((s,k)=>{ assign[idx[k]] = S[s]; });
+      best = {total:localBest.total, assign, used:S.length, exact:!aborted};
+    }
+  }
+  return {D, P, ...best};
+}
+function popcount(m){ let c=0; while(m){ c+=m&1; m>>=1; } return c; }
+
+/* ---------- Artikel ---------- */
+async function addByCode(raw, known){
+  const n = normalize(raw);
+  if(!n) return {ok:false, msg:"Das ist keine gültige ISBN oder EAN (Prüfziffer stimmt nicht)."};
+  const dup = state.items.some(i=>i.code===n.code);
+  const item = {id:Date.now()+"-"+Math.random().toString(36).slice(2,7), code:n.code, isBook:n.isBook,
+                title:"", authors:"", cover:"", manual:{}};
+  const info = known || (n.isBook ? await lookupIsbn(n.code) : null);
+  if(info){ item.title=info.title||""; item.authors=info.authors||""; item.cover=info.cover||""; }
+  if(!item.title) item.title = n.isBook ? "Titel nicht gefunden" : "Artikel (EAN)";
+  state.items.unshift(item); save(); renderAll();
+  return {ok:true, msg:"Hinzugefügt: "+item.title+(dup?" (Achtung: steht schon in der Liste)":"")};
+}
+
+/* ---------- Rendering ---------- */
+function renderAll(){ $("#count").textContent = state.items.length; renderItems(); renderCart(); $("#demoBanner").classList.toggle("hidden", !state.settings.useDemo); }
+
+function renderItems(){
+  const D = state.dealers.filter(d=>d.on);
+  if(!state.items.length){ $("#items").innerHTML = '<p class="muted">Noch keine Artikel. Füge unter „Erfassen“ Bücher hinzu.</p>'; return; }
+  $("#items").innerHTML = state.items.map(it=>{
+    const ps = D.map(d=>priceOf(it,d));
+    const max = Math.max(...ps.map(p=>p??0));
+    return `<div class="item">
+      ${it.cover ? `<img class="cover" src="${esc(it.cover)}" alt="" loading="lazy">` : `<div class="cover"></div>`}
+      <div class="meta">
+        <div class="title">${esc(it.title)}</div>
+        <div class="muted">${esc(it.authors)}${it.authors?" · ":""}${esc(it.code)}</div>
+        <div class="prices">${D.map((d,j)=>`<div class="price ${ps[j]!=null&&ps[j]===max&&max>0?"best":""}">
+          <label>${esc(d.name)}${isManual(it,d)?"":(ps[j]!=null?' <span class="tag">Bsp.</span>':"")}</label>
+          <input inputmode="decimal" data-item="${it.id}" data-dealer="${d.id}" value="${ps[j]==null?"":ps[j].toFixed(2).replace(".",",")}" placeholder="—" aria-label="Preis ${esc(d.name)}">
+        </div>`).join("")}</div>
+      </div>
+      <button class="x" data-del="${it.id}" aria-label="Entfernen">×</button>
+    </div>`;
+  }).join("");
+}
+
+function renderCart(){
+  const el = $("#cart");
+  if(!state.items.length){ el.innerHTML = '<div class="card"><p class="muted">Der Warenkorb ist leer.</p></div>'; return; }
+  const R = optimize(state.items, state.dealers);
+  // Vergleich: jedes Buch einzeln zum besten Preis, ohne Mindestwerte
+  let naive = 0; state.items.forEach((_,i)=>{ naive += Math.max(0, ...R.P[i].map(p=>p??0)); });
+  const per = R.D.map(()=>[]);
+  const unsold = [];
+  state.items.forEach((it,i)=>{ if(R.assign[i]>=0) per[R.assign[i]].push({it, p:R.P[i][R.assign[i]]}); else unsold.push({it, i}); });
+  let html = `<div class="card">
+    <div class="muted">Beste Aufteilung, Auszahlung gesamt</div>
+    <div class="total">${eur(R.total)}</div>
+    <div class="muted">${R.used} Paket${R.used===1?"":"e"} · ${state.items.length-unsold.length} von ${state.items.length} Artikeln verkauft${state.settings.useDemo?" · mit Beispielpreisen":""}</div>
+    ${naive - R.total > 0.004 ? `<div class="msg muted">Ohne Mindestwarenwerte wären ${eur(naive)} möglich. Die Differenz entsteht, weil kleine Pakete die Mindestwerte nicht erreichen.</div>`:""}
+    ${R.exact?"":`<div class="msg err">Sehr viele Artikel: Für mindestens eine Kombination wurde eine Näherungslösung verwendet.</div>`}
+  </div>`;
+  R.D.forEach((d,j)=>{
+    const list = per[j]; if(!list.length) return;
+    const sum = list.reduce((a,b)=>a+b.p,0);
+    html += `<div class="card">
+      <div class="dealer-h"><h2>${esc(d.name)}</h2><span class="ok-pill">Mindestwert ${eur(d.min)} erreicht</span></div>
+      <div class="muted">${list.length} Artikel · ${eur(sum)}</div>
+      <ul class="plain">${list.map(x=>`<li><span>${esc(x.it.title)}</span><span>${eur(x.p)}</span></li>`).join("")}</ul>
+      <div class="msg muted">Zum Verkaufen die ISBNs beim Händler eingeben: <a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.url.replace(/^https?:\/\//,""))}</a></div>
+      <details class="msg"><summary>ISBNs zum Kopieren</summary><p style="overflow-wrap:anywhere">${list.map(x=>x.it.code).join(" ")}</p></details>
+    </div>`;
+  });
+  // Hinweise zu Händlern ohne Paket
+  const hints = R.D.map((d,j)=>{ if(per[j].length) return ""; const cap = state.items.reduce((a,_,i)=>a+(R.P[i][j]??0),0);
+      return cap>0 ? `<li><span>${esc(d.name)}: würde zusammen ${eur(cap)} zahlen, Mindestwert ${eur(d.min)}</span></li>` : ""; }).join("");
+  if(unsold.length){
+    html += `<div class="card"><div class="dealer-h"><h2>Nicht verkauft</h2><span class="bad-pill">${unsold.length}</span></div>
+      <ul class="plain">${unsold.map(({it,i})=>{ const mx=Math.max(0,...R.P[i].map(p=>p??0));
+        return `<li><span>${esc(it.title)}</span><span class="muted">${mx>0?"bestes Gebot "+eur(mx)+", Mindestwert nicht erreichbar":"kein Ankauf"}</span></li>`; }).join("")}</ul>
+      ${hints?`<p class="muted" style="margin-bottom:0">Tipp: Mit weiteren Büchern kann ein zusätzliches Paket den Mindestwert erreichen.</p><ul class="plain">${hints}</ul>`:""}
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
+function renderDealerEdit(){
+  $("#dealerEdit").innerHTML = state.dealers.map((d,i)=>`<div class="dealer-edit">
+      <input type="checkbox" data-d="${i}" data-f="on" ${d.on?"checked":""} aria-label="aktiv">
+      <input type="text" data-d="${i}" data-f="name" value="${esc(d.name)}" aria-label="Name">
+      <input type="number" step="0.5" min="0" data-d="${i}" data-f="min" value="${d.min}" aria-label="Mindestwert in Euro">
+    </div>`).join("") + '<p class="muted">Spalten: aktiv · Name · Mindestwarenwert in €</p>';
+}
+
+/* ---------- Suchergebnisse ---------- */
+function showCandidates(container, heading, list, note){
+  const box = document.createElement("div");
+  box.className = "card";
+  box.innerHTML = `<h2>${esc(heading)}</h2>${note?`<p class="muted">${esc(note)}</p>`:""}` +
+    (list.length ? list.slice(0,8).map((b,k)=>`<div class="cand">
+        ${b.cover?`<img class="cover" src="${esc(b.cover)}" alt="" loading="lazy">`:`<div class="cover"></div>`}
+        <div class="meta"><div class="title">${esc(b.title)}</div>
+          <div class="muted">${esc(b.authors)}${b.year?" · "+esc(b.year):""}${b.publisher?" · "+esc(b.publisher):""}</div>
+          <div class="muted">ISBN ${esc(b.isbn)}${b.src?" · "+esc(b.src):""}</div></div>
+        <button class="btn small" data-k="${k}">+</button></div>`).join("")
+     : '<p class="muted">Keine passende Ausgabe gefunden. Probiere die Titelsuche mit anderen Wörtern oder gib die ISBN ein.</p>');
+  box.querySelectorAll("button[data-k]").forEach(btn=>btn.onclick = async ()=>{
+    btn.disabled = true; const b = list[+btn.dataset.k];
+    const r = await addByCode(b.isbn, b); btn.textContent = r.ok ? "✓" : "!";
+  });
+  container.prepend(box);
+  return box;
+}
+
+/* ---------- Foto + KI ---------- */
+async function fileToJpegBase64(file, maxSide=1568){
+  const url = URL.createObjectURL(file);
+  try{
+    const img = await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=url; });
+    const sc = Math.min(1, maxSide/Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement("canvas"); c.width=Math.round(img.naturalWidth*sc); c.height=Math.round(img.naturalHeight*sc);
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    return {b64: c.toDataURL("image/jpeg",0.85).split(",")[1], canvas:c};
+  } finally { URL.revokeObjectURL(url); }
+}
+async function barcodesFromCanvas(canvas){
+  const found = [];
+  if("BarcodeDetector" in window){
+    try{ const det = new BarcodeDetector({formats:["ean_13","upc_a"]}); for(const b of await det.detect(canvas)) found.push(b.rawValue); }catch(e){}
+  }
+  if(!found.length){
+    try{ await loadZXing(); const r = new ZXing.BrowserMultiFormatReader(); const res = await r.decodeFromImageUrl(canvas.toDataURL("image/jpeg",0.9)); if(res) found.push(res.getText()); }catch(e){}
+  }
+  return [...new Set(found)].filter(c=>normalize(c));
+}
+const AI_SCHEMA = {type:"object", additionalProperties:false, required:["books"], properties:{books:{type:"array", items:{
+  type:"object", additionalProperties:false, required:["title","authors","publisher","isbn","confidence"],
+  properties:{title:{type:"string"}, authors:{type:"string"}, publisher:{type:"string"},
+    isbn:{type:"string", description:"Nur wenn eine ISBN im Bild lesbar ist, sonst leer"},
+    confidence:{type:"string", enum:["hoch","mittel","niedrig"]}}}}}};
+async function askClaude(b64){
+  const res = await fetch("https://api.anthropic.com/v1/messages", {method:"POST", headers:{
+      "content-type":"application/json", "x-api-key":state.settings.apiKey, "anthropic-version":"2026-10-21",
+      "anthropic-beta":"server-side-fallback-2026-07-01",
+      "anthropic-dangerous-direct-browser-access":"true"},
+    body: JSON.stringify({model: state.settings.model || "claude-opus-5-5", max_tokens: 4000,
+      fallbacks: "default",
+      output_config:{effort:"low", format:{type:"json_schema", schema:AI_SCHEMA}},
+      messages:[{role:"user", content:[
+        {type:"image", source:{type:"base64", media_type:"image/jpeg", data:b64}},
+        {type:"text", text:"Auf dem Foto sind ein oder mehrere Bücher zu sehen (Cover, Rückseite oder Buchrücken im Regal). "+
+          "Liste jedes erkennbare Buch mit Titel, Autor(en) und Verlag, so wie es auf dem Buch steht. "+
+          "Trage eine ISBN nur ein, wenn sie im Bild tatsächlich lesbar ist; erfinde keine ISBN und rate keine. "+
+          "Lass Felder leer, die du nicht lesen kannst. Gib bei unsicherer Lesung confidence 'niedrig' an."}]}]})});
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error((data.error && data.error.message) || ("HTTP "+res.status));
+  if(data.stop_reason === "refusal") throw new Error("Die KI hat die Anfrage abgelehnt.");
+  const txt = (data.content||[]).find(b=>b.type==="text");
+  if(!txt) throw new Error("Keine Antwort der KI erhalten.");
+  return JSON.parse(txt.text).books || [];
+}
+async function handlePhoto(file){
+  const res = $("#results");
+  const status = document.createElement("div"); status.className="card";
+  status.innerHTML = '<span class="spinner"></span>Foto wird ausgewertet …'; res.prepend(status);
+  try{
+    const {b64, canvas} = await fileToJpegBase64(file);
+    // 1. Barcode im Foto?
+    const codes = await barcodesFromCanvas(canvas);
+    if(codes.length){
+      for(const c of codes){ const r = await addByCode(c); status.innerHTML = `<p class="msg ok">Barcode im Foto gefunden. ${esc(r.msg)}</p>`; }
+      return;
+    }
+    // 2. KI-Erkennung
+    if(!state.settings.apiKey){
+      status.innerHTML = '<p class="msg">Kein Barcode im Foto erkannt. Für die Erkennung von Cover oder Buchrücken bitte unter „Einstellungen“ einen Claude-API-Schlüssel eintragen, oder Titel und Autor unten in die Suche tippen.</p>';
+      return;
+    }
+    status.innerHTML = '<span class="spinner"></span>KI liest Titel und Autor …';
+    const books = await askClaude(b64);
+    if(!books.length){ status.innerHTML = '<p class="msg err">Die KI hat auf dem Foto kein Buch erkannt.</p>'; return; }
+    status.innerHTML = `<p class="msg ok">${books.length} Buch/Bücher erkannt. Bitte jeweils die passende Ausgabe wählen, denn der Preis hängt an der ISBN der Ausgabe.</p>`;
+    for(const b of books.reverse()){
+      const n = b.isbn ? normalize(b.isbn) : null;
+      const label = `Erkannt: „${b.title||"?"}“${b.authors?" von "+b.authors:""} (Sicherheit: ${b.confidence})`;
+      if(n){
+        const info = await lookupIsbn(n.code);
+        showCandidates(res, label, [Object.assign({isbn:n.code, title:b.title, authors:b.authors, src:"ISBN vom Foto gelesen"}, info||{})]);
+      } else if(b.title){
+        const cands = await searchBooks(b.title, b.authors);
+        showCandidates(res, label, cands, b.publisher ? "Verlag laut Foto: "+b.publisher : "");
+      }
+    }
+  }catch(e){
+    status.innerHTML = `<p class="msg err">Fehler bei der Auswertung: ${esc(e.message)}</p>`;
+  }
+}
+
+/* ---------- Barcode-Scanner (Live-Kamera) ---------- */
+let zxingPromise = null, scanStop = null;
+function loadZXing(){
+  if(window.ZXing) return Promise.resolve();
+  if(!zxingPromise) zxingPromise = new Promise((res,rej)=>{ const s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"; s.onload=res; s.onerror=()=>{ zxingPromise=null; rej(new Error("Scanner-Bibliothek konnte nicht geladen werden")); }; document.head.appendChild(s); });
+  return zxingPromise;
+}
+async function openScanner(){
+  const sc = $("#scanner"), video = $("#video"), st = $("#scanStatus");
+  sc.style.display = "flex"; st.textContent = "Kamera wird gestartet …";
+  let done = false;
+  const onCode = async code => {
+    if(done || !normalize(code)) return; done = true;
+    if(navigator.vibrate) navigator.vibrate(80);
+    st.textContent = "Erkannt: "+code; closeScanner();
+    const r = await addByCode(code); showMsg("#isbnMsg", r.msg, r.ok);
+  };
+  try{
+    if("BarcodeDetector" in window && (await BarcodeDetector.getSupportedFormats()).includes("ean_13")){
+      const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+      video.srcObject = stream; await video.play();
+      const det = new BarcodeDetector({formats:["ean_13","upc_a"]});
+      let alive = true;
+      scanStop = ()=>{ alive=false; stream.getTracks().forEach(t=>t.stop()); video.srcObject=null; };
+      st.textContent = "Suche Barcode …";
+      (async function loop(){ while(alive && !done){ try{ const r = await det.detect(video); if(r[0]) onCode(r[0].rawValue); }catch(e){} await new Promise(r=>setTimeout(r,200)); } })();
+    } else {
+      await loadZXing();
+      const hints = new Map(); hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.UPC_A]);
+      const reader = new ZXing.BrowserMultiFormatReader(hints);
+      scanStop = ()=>{ try{ reader.reset(); }catch(e){} };
+      st.textContent = "Suche Barcode …";
+      await reader.decodeFromConstraints({video:{facingMode:"environment"}}, video, (result)=>{ if(result) onCode(result.getText()); });
+    }
+  }catch(e){
+    st.textContent = "Kamera nicht verfügbar: "+e.message+". Die App braucht HTTPS und die Kamera-Erlaubnis.";
+  }
+}
+function closeScanner(){ if(scanStop){ scanStop(); scanStop=null; } $("#scanner").style.display="none"; }
+
+/* ---------- Ereignisse ---------- */
+function showMsg(sel, text, ok){ const m=$(sel); m.textContent=text; m.className="msg "+(ok?"ok":"err"); }
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active", x===b));
+  ["add","list","cart","settings"].forEach(t=>$("#tab-"+t).classList.toggle("hidden", t!==b.dataset.tab));
+  if(b.dataset.tab==="cart") renderCart();
+  window.scrollTo(0,0);
+});
+$("#isbnForm").onsubmit = async e=>{ e.preventDefault(); const v=$("#isbnInput").value; if(!v.trim()) return;
+  showMsg("#isbnMsg","Suche …",true); const r = await addByCode(v); showMsg("#isbnMsg", r.msg, r.ok); if(r.ok) $("#isbnInput").value=""; };
+$("#searchForm").onsubmit = async e=>{ e.preventDefault(); const t=$("#qTitle").value.trim(), a=$("#qAuthor").value.trim(); if(!t) return;
+  const list = await searchBooks(t,a); showCandidates($("#results"), "Suche: „"+t+"“"+(a?" von "+a:""), list); };
+$("#btnPhoto").onclick = ()=>$("#photoInput").click();
+$("#photoInput").onchange = e=>{ const f=e.target.files[0]; e.target.value=""; if(f) handlePhoto(f); };
+$("#btnScan").onclick = openScanner;
+$("#btnCloseScan").onclick = closeScanner;
+$("#btnClear").onclick = ()=>{ if(state.items.length && confirmClear()){ state.items=[]; save(); renderAll(); } };
+let clearArmed=false;
+function confirmClear(){ if(clearArmed){ clearArmed=false; $("#btnClear").textContent="Liste leeren"; return true; }
+  clearArmed=true; $("#btnClear").textContent="Wirklich leeren?"; setTimeout(()=>{clearArmed=false; $("#btnClear").textContent="Liste leeren";},3000); return false; }
+$("#items").addEventListener("click", e=>{ const id=e.target.dataset.del; if(id){ state.items=state.items.filter(i=>i.id!==id); save(); renderAll(); } });
+$("#items").addEventListener("change", e=>{
+  const t=e.target; if(!t.dataset.item) return;
+  const it=state.items.find(i=>i.id===t.dataset.item); if(!it) return;
+  it.manual = it.manual||{};
+  const v = t.value.trim().replace(",",".");
+  if(v===""){ it.manual[t.dataset.dealer]=null; } else if(!isNaN(+v) && +v>=0){ it.manual[t.dataset.dealer]=r2(+v); }
+  save(); renderAll();
+});
+$("#dealerEdit").addEventListener("change", e=>{ const t=e.target, d=state.dealers[+t.dataset.d]; if(!d) return;
+  if(t.dataset.f==="on") d.on=t.checked; else if(t.dataset.f==="min") d.min=Math.max(0,+t.value||0); else d.name=t.value;
+  save(); renderAll(); });
+$("#btnAddDealer").onclick = ()=>{ state.dealers.push({id:"h"+Date.now(), name:"Neuer Händler", min:10, url:"https://", on:true}); save(); renderDealerEdit(); renderAll(); };
+$("#apiKey").value = state.settings.apiKey; $("#model").value = state.settings.model; $("#useDemo").checked = state.settings.useDemo;
+$("#apiKey").onchange = e=>{ state.settings.apiKey=e.target.value.trim(); save(); updateHint(); };
+$("#model").onchange = e=>{ state.settings.model=e.target.value.trim()||"claude-opus-5-5"; save(); };
+$("#useDemo").onchange = e=>{ state.settings.useDemo=e.target.checked; save(); renderAll(); };
+function updateHint(){ $("#aiHint").textContent = state.settings.apiKey
+  ? "Foto: Erst wird ein Barcode gesucht, sonst liest die KI Titel und Autor (auch mehrere Buchrücken auf einem Bild) und sucht die ISBN bei Google Books und Open Library."
+  : "Foto: Ohne API-Schlüssel wird nur ein Barcode im Bild gesucht. Für Cover- und Buchrücken-Erkennung unter „Einstellungen“ einen Claude-API-Schlüssel eintragen."; }
+
+/* Manifest für „Zum Home-Bildschirm“ */
+try{ const m={name:"Bücher verticken",short_name:"Bücher",display:"standalone",start_url:".",background_color:"#f6f5f1",theme_color:"#1f6f5c"};
+  const l=document.createElement("link"); l.rel="manifest"; l.href="data:application/manifest+json,"+encodeURIComponent(JSON.stringify(m)); document.head.appendChild(l); }catch(e){}
+
+renderDealerEdit(); updateHint(); renderAll();
+</script>
+</body>
+</html>
