@@ -1,0 +1,49 @@
+name: Buchdatenbank bauen
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-db.yml"
+      - "tools/build_db.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-db
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Autoren-Dump laden
+        run: |
+          curl -sSfL --retry 5 --retry-delay 20 -o authors.txt.gz \
+            https://openlibrary.org/data/ol_dump_authors_latest.txt.gz
+          ls -lh authors.txt.gz
+
+      - name: Ausgaben-Dump streamen und filtern
+        run: |
+          rm -rf data
+          curl -sSfL --retry 5 --retry-delay 20 \
+            https://openlibrary.org/data/ol_dump_editions_latest.txt.gz \
+            | gunzip -c | python3 tools/build_db.py - authors.txt.gz data
+          rm -f authors.txt.gz
+          du -sh data data/isbn data/title
+          ls data/isbn | wc -l; ls data/title | wc -l
+          ls -S -l data/isbn | head -3; ls -S -l data/title | head -3
+
+      - name: Ergebnis committen
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git commit -m "Buchdatenbank aus Open Library aktualisieren" || echo "Keine Änderungen"
+          git pull --rebase origin main
+          git push origin HEAD:main
