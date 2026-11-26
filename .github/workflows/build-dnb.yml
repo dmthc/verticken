@@ -9,6 +9,9 @@ on:
       - "tools/pack_artifact2.py"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -31,20 +34,13 @@ jobs:
           echo "== Testbücher"
           grep -i -e 'Wirklichkeit der Psyche' -e 'Medizin für jedermann' dnb.tsv | head -20
 
-      - name: Artefakt-Daten packen
+      - name: Ergebnis in Branch dnb-data ablegen
         run: |
-          python3 tools/pack_artifact2.py data dnb.tsv pack
-          gzip -9 dnb.tsv
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dnb-tsv
-          path: dnb.tsv.gz
-          retention-days: 30
-          compression-level: 0
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: artefakt-daten
-          path: pack
-          retention-days: 30
+          mkdir -p out && gzip -9 -c dnb.tsv | split -b 90m -d - out/dnb.tsv.gz.part
+          ls -l out
+          cd out
+          git init -q -b dnb-data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898+github-actions[bot]@users.noreply.github.com"
+          git add . && git commit -qm "DNB-Auszug (ISBN 978-3), Stand $(date -u +%F)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" dnb-data
