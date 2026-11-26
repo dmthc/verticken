@@ -1,0 +1,21 @@
+name: DNB-Daten erkunden
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/dnb-probe.yml"]
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Dateiliste data.dnb.de
+        run: |
+          set +e
+          for u in https://data.dnb.de/opendata/ https://data.dnb.de/opendata/?C=S\;O=D; do
+            echo "== $u"; curl -sSL --max-time 60 "$u" | sed -e 's/<[^>]*>/ /g' | grep -iE 'dnb|gnd|\.gz|\.zip|M ' | head -150
+          done
+      - name: SRU-Test
+        run: |
+          set +e
+          curl -sSL --max-time 60 "https://services.dnb.de/sru/dnb?version=1.1&operation=searchRetrieve&query=tit%3DWirklichkeit%20der%20Psyche%20and%20per%3DRoberts&recordSchema=MARC21-xml&maximumRecords=3" | head -c 4000
