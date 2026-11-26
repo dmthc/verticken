@@ -93,7 +93,7 @@ for k in range(SHARDS):
     put(f"{OUT}/words/{k:03d}.txt", "\n".join(lines) + "\n")
 
 meta = {"v": 2, "enc": "zlib-base64", "records": len(keys), "chunk": chunk, "shards": SHARDS, "firsts": firsts,
-        "source": "Open Library und Deutsche Nationalbibliothek (CC0)",
+        "source": "Open Library und der Deutschen Nationalbibliothek",
         "built": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")}
 json.dump(meta, open(OUT + "/meta.json", "w"))
 tot = sum(os.path.getsize(os.path.join(d, f)) for d, _, fs in os.walk(OUT) for f in fs)
