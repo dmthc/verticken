@@ -6,7 +6,8 @@ Aufruf: python3 tools/pack_artifact2.py OL_DATA_ORDNER DNB_TSV AUSGABE_ORDNER
 Quellen: Open Library (data/isbn/*.tsv aus build_db.py) und Deutsche Nationalbibliothek (build_dnb.py).
 Nur ISBNs 978-3… Bei doppelten ISBNs gewinnt der DNB-Titel.
 Jede Datei ist zlib-komprimiert und Base64-kodiert (reiner Text, im Browser per DecompressionStream lesbar).
-    rows/NNN.txt  – Bücher nach ISBN sortiert. Zeile: isbn-abstand(base36) \t titel \t autor \t jahr
+    rows/NNN.txt  – Bücher nach ISBN sortiert, spaltenweise: Zeile 1 ISBN-Abstände (base36, Komma),
+                    dann n Zeilen Jahr, n Zeilen Autor, n Zeilen Titel
     words/NNN.txt – Suchwort \t Zeilennummern als Abstände (base36)
     meta.json     – Erste ISBN je rows-Datei, Anzahl, Stand (unkomprimiert)
 """
@@ -82,15 +83,19 @@ firsts, index = [], {}
 for c in range(0, len(keys), chunk):
     part = keys[c:c + chunk]
     firsts.append(str(part[0]))
-    prev, lines = BASE, []
+    prev, deltas, ys, aus, tis = BASE, [], [], [], []
     for j, isbn in enumerate(part):
         t, a, y = recs[isbn]
-        t, a = cl(t, TITLE), cl(a, AUTHOR)
-        lines.append(f"{b36(isbn - prev)}\t{t}\t{a}\t{y}")
+        deltas.append(b36(isbn - prev))
+        ys.append(y)
+        aus.append(cl(a, AUTHOR))
+        tis.append(cl(t, TITLE))
         prev = isbn
         row = c + j
-        for w in set(tokens(recs[isbn][0])) | set(tokens(recs[isbn][1])[:4]):
+        for w in set(tokens(t)) | set(tokens(a)[:4]):
             index.setdefault(w, []).append(row)
+    # spaltenweise: 1 Zeile ISBN-Abstände, dann je n Zeilen Jahr, Autor, Titel (komprimiert besser)
+    lines = [",".join(deltas)] + ys + aus + tis
     put(f"{OUT}/rows/{c // chunk:03d}.txt", "\n".join(lines) + "\n")
 recs = None
 
@@ -105,7 +110,7 @@ for k in range(SHARDS):
     lines = sorted(shards.get(k, []))
     put(f"{OUT}/words/{k:03d}.txt", "\n".join(lines) + "\n")
 
-meta = {"v": 2, "enc": "zlib-base64", "records": len(keys), "chunk": chunk, "shards": SHARDS, "firsts": firsts,
+meta = {"v": 3, "enc": "zlib-base64", "records": len(keys), "chunk": chunk, "shards": SHARDS, "firsts": firsts,
         "source": "Open Library und der Deutschen Nationalbibliothek",
         "built": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")}
 json.dump(meta, open(OUT + "/meta.json", "w"))
