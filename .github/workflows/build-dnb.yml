@@ -18,8 +18,12 @@ jobs:
 
       - name: DNB-Gesamtabzug streamen und filtern
         run: |
-          curl -sSfL --retry 5 --retry-delay 30 https://data.dnb.de/opendata/dnb-all_lds.nt.gz \
-            | gunzip -c \
+          df -h / /mnt
+          sudo apt-get install -y -qq aria2 >/dev/null
+          aria2c -x16 -s16 -k20M --max-tries=10 --retry-wait=20 --summary-interval=300 \
+            -d . -o dnb.nt.gz https://data.dnb.de/opendata/dnb-all_lds.nt.gz
+          ls -l dnb.nt.gz
+          gunzip -c dnb.nt.gz \
             | grep -F -e '/bibo/isbn13> ' -e '/bibo/isbn10> ' -e '/bibo/gtin14> ' -e '/1.1/title> ' \
                       -e '/u/P60327> ' -e '/1.1/publisher> ' -e '/terms/issued> ' \
             | python3 tools/build_dnb.py - dnb.tsv 9783
