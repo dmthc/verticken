@@ -18,7 +18,7 @@ from build_db import tokens  # gleiche Wortzerlegung wie in der App
 CTRL = re.compile(r"[\x00-\x1f\x7f�​-‏  ﻿]")
 SRC, DNB, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
 SHARDS, BASE, MAX_ROW_FILES = 256, 9783000000000, 200
-TITLE, AUTHOR = 40, 25
+TITLE, AUTHOR = int(os.environ.get("TITLE_LEN", 40)), int(os.environ.get("AUTHOR_LEN", 25))
 os.makedirs(OUT + "/rows", exist_ok=True)
 os.makedirs(OUT + "/words", exist_ok=True)
 
@@ -34,6 +34,12 @@ def b36(n):
 
 def cl(s, n):
     return CTRL.sub("", s or "")[:n].strip()
+
+
+def dnb_author(a):
+    # "Robert E. Rothenberg. Übers. von Gertrud Gollmann" -> "Robert E. Rothenberg"
+    a = re.sub(r"^(?:(?:hrsg|hg|bearb|übers|ausgew|eingel)\.?\s+(?:von|v\.)\s+|von\s+|(?:dr|prof)\.\s*(?:med\.|phil\.|rer\.\s*nat\.)?\s*)+", "", a, flags=re.I)
+    return re.split(r"(?<=[a-zäöüß]{2})\.\s|\s+/\s|;|\[", a)[0].strip(" .,:")
 
 
 def put(path, text):
@@ -54,6 +60,7 @@ for line in open(DNB, encoding="utf-8"):
     if len(p) < 4 or not p[0].startswith("9783"):
         continue
     k = int(p[0])
+    p[2] = dnb_author(p[2])
     old = recs.get(k)
     n_dnb += 1
     if old:
