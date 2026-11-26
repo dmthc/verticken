@@ -7,15 +7,22 @@ on:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
-      - name: Dateiliste data.dnb.de
-        run: |
-          set +e
-          for u in https://data.dnb.de/opendata/ https://data.dnb.de/opendata/?C=S\;O=D; do
-            echo "== $u"; curl -sSL --max-time 60 "$u" | sed -e 's/<[^>]*>/ /g' | grep -iE 'dnb|gnd|\.gz|\.zip|M ' | head -150
-          done
       - name: SRU-Test
         run: |
           set +e
-          curl -sSL --max-time 60 "https://services.dnb.de/sru/dnb?version=1.1&operation=searchRetrieve&query=tit%3DWirklichkeit%20der%20Psyche%20and%20per%3DRoberts&recordSchema=MARC21-xml&maximumRecords=3" | head -c 4000
+          for q in "tit%3DWirklichkeit%20Psyche%20and%20per%3DRoberts" "tit%3DMedizin%20jedermann%20and%20per%3DRothenberg"; do
+            echo "== $q"
+            curl -sSL --max-time 60 "https://services.dnb.de/sru/dnb?version=1.1&operation=searchRetrieve&query=$q&recordSchema=oai_dc&maximumRecords=10" \
+              | grep -oE '<(dc:title|dc:creator|dc:identifier[^>]*|dc:publisher|dc:date)>[^<]*' | head -60
+          done
+      - name: Anfang des Gesamtabzugs ansehen
+        run: |
+          set +e
+          curl -sSL --max-time 900 https://data.dnb.de/opendata/dnb-all_lds.nt.gz | gunzip -c 2>/dev/null | head -n 3000000 > head.nt
+          wc -l head.nt
+          echo "== Praedikate"; awk '{print $2}' head.nt | sort | uniq -c | sort -rn | head -60
+          echo "== Beispiel ISBN-Datensatz"
+          s=$(grep -m1 'isbn13' head.nt | awk '{print $1}'); grep -F "$s " head.nt | head -60 | cut -c1-300
+          echo "== ISBN-Werte"; grep -E 'isbn|P60521|gtin' head.nt | head -30 | cut -c1-250
