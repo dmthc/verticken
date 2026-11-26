@@ -1,0 +1,46 @@
+name: DNB-Katalog einlesen
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-dnb.yml"
+      - "tools/build_dnb.py"
+      - "tools/pack_artifact2.py"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: DNB-Gesamtabzug streamen und filtern
+        run: |
+          curl -sSfL --retry 5 --retry-delay 30 https://data.dnb.de/opendata/dnb-all_lds.nt.gz \
+            | gunzip -c \
+            | grep -F -e '/bibo/isbn13> ' -e '/bibo/isbn10> ' -e '/bibo/gtin14> ' -e '/1.1/title> ' \
+                      -e '/u/P60327> ' -e '/1.1/publisher> ' -e '/terms/issued> ' \
+            | python3 tools/build_dnb.py - dnb.tsv 9783
+          ls -lh dnb.tsv
+          echo "== Testbücher"
+          grep -i -e 'Wirklichkeit der Psyche' -e 'Medizin für jedermann' dnb.tsv | head -20
+
+      - name: Artefakt-Daten packen
+        run: |
+          python3 tools/pack_artifact2.py data dnb.tsv pack
+          gzip -9 dnb.tsv
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dnb-tsv
+          path: dnb.tsv.gz
+          retention-days: 30
+          compression-level: 0
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artefakt-daten
+          path: pack
+          retention-days: 30
