@@ -29,6 +29,7 @@ jobs:
           gunzip -c dnb.nt.gz \
             | grep -F -e '/bibo/isbn13> ' -e '/bibo/isbn10> ' -e '/bibo/gtin14> ' -e '/1.1/title> ' \
                       -e '/u/P60327> ' -e '/1.1/publisher> ' -e '/terms/issued> ' \
+                      -e '/terms/medium> ' -e '/u/P60048> ' \
             | python3 tools/build_dnb.py - dnb.tsv 9783
           ls -lh dnb.tsv
           echo "== Testbücher"
@@ -37,6 +38,7 @@ jobs:
       - name: Ergebnis in Branch dnb-data ablegen
         run: |
           mkdir -p out && gzip -9 -c dnb.tsv | split -b 90m -d - out/dnb.tsv.gz.part
+          sort -u dnb.tsv.online | gzip -9 > out/dnb.tsv.online.gz
           ls -l out
           cd out
           git init -q -b dnb-data

@@ -14,7 +14,10 @@ P = {
     "<http://purl.org/ontology/bibo/gtin14>": "g", "<http://purl.org/dc/elements/1.1/title>": "t",
     "<http://rdaregistry.info/Elements/u/P60327>": "a", "<http://purl.org/dc/elements/1.1/publisher>": "p",
     "<http://purl.org/dc/terms/issued>": "y",
+    "<http://purl.org/dc/terms/medium>": "m", "<http://rdaregistry.info/Elements/u/P60048>": "m",
 }
+ONLINE = "RDACarrierType/1018"  # Online-Ressource (E-Book, PDF) – wird nicht angekauft
+skipped = 0
 LIT = re.compile(r'^"((?:[^"\\]|\\.)*)"')
 ESC = re.compile(r'\\(u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|.)')
 CTRL = re.compile(r"[\x00-\x1f\x7f�]+")
@@ -60,12 +63,19 @@ def author_of(stmt):
 
 
 out = open(OUT, "w", encoding="utf-8")
+online = open(OUT + ".online", "w", encoding="utf-8")  # ISBNs von E-Books, werden auch aus Open Library entfernt
 cur, rec = None, {}
 n = kept = 0
 
 
 def flush():
-    global kept
+    global kept, skipped
+    if any(ONLINE in m for m in rec.get("m", [])):
+        skipped += 1
+        for x in {to13(v) for v in rec.get("i", []) + rec.get("g", [])}:
+            if x and x.startswith(PREFIX):
+                online.write(x + "\n")
+        return
     isbns = {x for x in (to13(v) for v in rec.get("i", []) + rec.get("g", [])) if x and x.startswith(PREFIX)}
     t = rec.get("t", [""])[0]
     if not isbns or not t:
@@ -91,10 +101,11 @@ for line in sys.stdin if sys.argv[1] == "-" else open(sys.argv[1], encoding="utf
         if cur is not None:
             flush()
         cur, rec = s, {}
-    v = lit(o)
+    v = o.split(">")[0] if k == "m" else lit(o)
     if v:
         rec.setdefault(k, []).append(v)
 if cur is not None:
     flush()
 out.close()
-print(f"Fertig: {n:,} Zeilen, {kept:,} ISBN-Einträge mit Präfix {PREFIX}", flush=True)
+online.close()
+print(f"Fertig: {n:,} Zeilen, {kept:,} ISBN-Einträge mit Präfix {PREFIX}, {skipped:,} Online-Ressourcen übersprungen", flush=True)

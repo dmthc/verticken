@@ -68,6 +68,12 @@ for line in open(DNB, encoding="utf-8"):
         recs[k] = [p[1], p[2] or old[1], p[3] or old[2]]
     else:
         recs[k] = [p[1], p[2], p[3]]
+n_online = 0
+if os.path.exists(DNB + ".online"):
+    for line in open(DNB + ".online"):
+        if recs.pop(int(line), None):
+            n_online += 1
+print(f"E-Books entfernt: {n_online:,}", flush=True)
 print(f"Open Library: {n_ol:,}  DNB: {n_dnb:,}  in beiden: {n_both:,}  zusammen: {len(recs):,}", flush=True)
 
 keys = sorted(recs)
